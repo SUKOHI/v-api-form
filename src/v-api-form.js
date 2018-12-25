@@ -87,7 +87,7 @@ Vue.mixin({
 
                     if(file instanceof FileList) {
 
-                        for(let i in file) {
+                        for(let i = 0 ; i < file.length ; i++) {
 
                             let targetFile = file[i];
                             data.append(key +'[]', targetFile);

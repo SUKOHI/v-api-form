@@ -84,7 +84,7 @@ Vue.mixin({
 
                     if (file instanceof FileList) {
 
-                        for (var i in file) {
+                        for (var i = 0; i < file.length; i++) {
 
                             var targetFile = file[i];
                             data.append(key + '[]', targetFile);
@@ -150,7 +150,7 @@ Vue.mixin({
         },
 
 
-        // This is mainly for axios + Laravel response.
+        // This is mainly for axios and Laravel response.
         // Please override if you'd like to use other data construction.
         getFormErrors: function getFormErrors(error) {
 
