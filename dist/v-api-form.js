@@ -93,6 +93,12 @@ Vue.mixin({
 
                         data.append(key, file);
                     }
+                } else if (targetParam instanceof Array) {
+
+                    for (var _i = 0; _i < targetParam.length; _i++) {
+
+                        data.append(key + '[]', targetParam[_i]);
+                    }
                 } else {
 
                     data.append(key, targetParam);

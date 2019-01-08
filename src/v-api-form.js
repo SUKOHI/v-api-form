@@ -100,6 +100,14 @@ Vue.mixin({
 
                     }
 
+                } else if(targetParam instanceof Array) {
+
+                    for(let i = 0 ; i < targetParam.length ; i++) {
+
+                        data.append(key +'[]', targetParam[i]);
+
+                    }
+
                 } else {
 
                     data.append(key, targetParam);

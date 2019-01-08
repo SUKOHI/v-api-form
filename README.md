@@ -14,7 +14,8 @@ First, set parameters in Vue.
         data: {
             params: {
                 email: '',
-                password: ''
+                password: '',
+                categories: [] // e.g. multiple checkboxes
             }
         },
         
