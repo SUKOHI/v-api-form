@@ -301,7 +301,11 @@ Vue.mixin({
                     }
 
                     var fileInput = this.paramFileInputs[paramKey + '.' + key];
-                    fileInput.value = '';
+
+                    if (fileInput !== undefined) {
+
+                        fileInput.value = '';
+                    }
                 } else {
 
                     params[key] = targetParam;
