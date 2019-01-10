@@ -60,7 +60,8 @@
             submit: function() {
 
                 const params = this.getFormData({
-                    _method: 'PUT'
+                    _method: 'PUT',
+                    numbers: [1, 2, 3, 4, 5]
                 });
                 console.log(params);
                 axios.post('test.html', params)

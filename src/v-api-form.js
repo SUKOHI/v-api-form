@@ -119,7 +119,21 @@ Vue.mixin({
 
                 for(let key in extraParams) {
 
-                    data.append(key, extraParams[key]);
+                    var extraParam = extraParams[key];
+
+                    if(extraParam instanceof Array) {
+
+                        for(let i = 0 ; i < extraParam.length ; i++) {
+
+                            data.append(key +'[]', extraParam[i]);
+
+                        }
+
+                    } else {
+
+                        data.append(key, extraParam);
+
+                    }
 
                 }
 

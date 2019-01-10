@@ -85,7 +85,8 @@
                 const url = (key === 'params') ? 'test1.html' : 'test2.html';
                 const method = (key === 'params') ? 'PUT' : 'DELETE';
                 const params = this.getFormData({
-                    _method: method
+                    _method: method,
+                    numbers: [1, 2, 3, 4, 5]
                 }, key);
                 console.log(params);
                 axios.post(url, params)

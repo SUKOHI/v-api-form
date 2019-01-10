@@ -37,7 +37,10 @@ You can get parameters through `FormData()`.
     
     // Or with extra parameters
     
-    const params = this.getFormData({ _method: 'PUT' });
+    const params = this.getFormData({
+        _method: 'PUT',             // string
+        numbers: [1, 2, 3, 4, 5]    // array
+    });
 
 ## Errors
 
