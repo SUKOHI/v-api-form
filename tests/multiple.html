@@ -1,0 +1,136 @@
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"></script>
+</head>
+<body>
+<div id="app">
+    <h1>Original Parameters</h1>
+    {{ originalParams }}
+    <hr>
+    <h1>Form - 1</h1>
+    <h2>Parameters</h2>
+    {{ params }}
+    <h2>Original Parameters</h2>
+    {{ originalParams }}
+    <h2>Errors</h2>
+    {{ errors }}
+    <br>
+    <br>
+    <form>
+        <input type="text" v-model="params.email">
+        <br>
+        <input type="password" v-model="params.password">
+        <br>
+        <input type="file" v-file-model="params.profile">
+        <br>
+        <br>
+        <button type="button" @click="submit('params')">Submit</button><br>
+        <button type="button" @click="clearFormParams()">Clear params</button>
+        <button type="button" @click="resetFormParams()">Reset params</button><br>
+        <button type="button" @click="clearFormErrors()">Clear errors</button><br>
+        <button type="button" @click="clearInputParams()">Clear only inputs</button>
+        <button type="button" @click="clearFileParams()">Clear only files</button>
+    </form>
+    <hr>
+    <h1>Form - 2</h1>
+    <h2>Parameters</h2>
+    {{ customParams }}
+    <h2>Errors</h2>
+    {{ customErrors }}
+    <br>
+    <br>
+    <form enctype="multipart/form-data">
+        <input type="text" v-model="customParams.email">
+        <br>
+        <input type="text" v-model="customParams.password">
+        <br>
+        <input type="file" v-file-model="customParams.profiles" multiple>
+        <input type="file" v-file-model="customParams.photos" multiple>
+        <br>
+        <hr>
+        <button type="button" @click="submit('customParams')">Submit</button><br>
+        <button type="button" @click="clearFormParams('customParams')">Clear params</button>
+        <button type="button" @click="resetFormParams('customParams')">Reset params</button><br>
+        <button type="button" @click="clearFormErrors('customErrors')">Clear errors</button><br>
+        <button type="button" @click="clearInputParams('customParams')">Clear only inputs</button>
+        <button type="button" @click="clearFileParams('customParams')">Clear only files</button>
+    </form>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="../dist/v-api-form.js"></script>
+<script>
+
+    new Vue({
+        el: '#app',
+        data: {
+            params: {
+                email: 'test1@example.com',
+                password: 'password1',
+                categories: [2,3],
+                profile: File
+            },
+
+            customParams: {
+                email: 'test2@example.com',
+                password: 'password2',
+                profiles: FileList,
+                photos: FileList,
+            },
+            customErrors: {}
+        },
+        methods: {
+            submit: function(key) {
+
+                const url = (key === 'params') ? 'test1.html' : 'test2.html';
+                const method = (key === 'params') ? 'PUT' : 'DELETE';
+                const params = this.getFormData({
+                    _method: method
+                }, key);
+                console.log(params);
+                axios.post(url, params)
+                    .then(function(response) {
+
+                        console.log(response.data);
+
+                    })
+                    .catch(function(error) {
+
+                        console.log(error.response.data);
+
+                    });
+
+                const error = {
+                    response: {
+                        data: {
+                            errors: {
+                                email: 'The email field is required.',
+                                password: 'The password field is required.',
+                            }
+                        }
+                    }
+                };
+                const errorKey = (key === 'params') ? 'errors' : 'customErrors';
+                this.setFormErrors(error, errorKey);
+
+            }
+        },
+        beforeMount: function() {
+
+            this.setApiFormParams([
+                {
+                    params: 'params',
+                    errors: 'errors'
+                },
+                {
+                    params: 'customParams',
+                    errors: 'customErrors'
+                }
+            ]);
+
+        }
+    })
+
+</script>
+</body>
+</html>

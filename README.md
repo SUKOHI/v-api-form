@@ -80,20 +80,24 @@ If you'd like to set `<input type="file">` in your page, use `v-file-model` in t
 
     <input type="file" v-file-model="params.profile">
     
-In this case, you need to set `null` as the default parameter for `profile` .
+In this case, set `File` or `FileList` as the default parameter.
 
     data: {
         params: {
-            email: '',
-            password: '',
-            profile: null // <--HERE
+            profile: File
         }
     }
-    
-Also you can use `multiple` property.
+
+Or multiply
 
     <input type="file" v-file-model="customParams.profiles" multiple>
-    
+
+    data: {
+        params: {
+            profiles: FileList
+        }
+    }
+
 Note: 
 
 When you use `multiple` for file input, parameter name is automatically changed.  
@@ -103,7 +107,9 @@ For example, `profiles[]` is the name in the above case.
 
 ### Parameters
 
-    this.clearFormParams();
+    this.clearFormParams();     // inputs & files
+    this.clearInputParams();    // only inputs
+    this.clearFileParams();     // only files
     
     // or
     
@@ -147,9 +153,14 @@ You can specify target parameters/errors when using each methods in multiple par
     
 ### Clear and reset 
 
-    this.clearFormParams('customParams');
-    this.resetFormParams('customParams');
-    this.clearFormErrors('customParams');
+    // Parameter
+    this.clearFormParams('customParams');   // inputs & files
+    this.clearInputParams('customParams');  // only inputs
+    this.clearFileParams('customParams');   // only files
+    this.resetFormParams('customParams');   // reset params
+
+    // Error
+    this.clearFormErrors('customErrors');
     
 # License
 This package is licensed under the MIT License.

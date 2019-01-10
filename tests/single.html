@@ -1,0 +1,96 @@
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"></script>
+</head>
+<body>
+<div id="app">
+    <h1>Parameters</h1>
+    {{ params }}
+    <h1>Original Parameters</h1>
+    {{ originalParams }}
+    <h1>Errors</h1>
+    {{ errors }}
+    <br>
+    <br>
+    <hr>
+    <br>
+    <form>
+        <input type="text" v-model="params.email">
+        <br>
+        <input type="password" v-model="params.password">
+        <br>
+        <div v-for="(name,id) in categories">
+            <label>
+                <input type="checkbox" :value="id" v-model="params.categories"> {{ name }}
+            </label>
+        </div>
+        <br>
+        <input type="file" v-file-model="params.profile">
+        <br>
+        <hr>
+        <button type="button" @click="submit">Submit</button><br>
+        <button type="button" @click="clearFormParams()">Clear params</button>
+        <button type="button" @click="resetFormParams()">Reset params</button><br>
+        <button type="button" @click="clearFormErrors()">Clear errors</button><br>
+        <button type="button" @click="clearInputParams()">Clear only inputs</button>
+        <button type="button" @click="clearFileParams()">Clear only files</button>
+    </form>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="../dist/v-api-form.js"></script>
+<script>
+
+    new Vue({
+        el: '#app',
+        data: {
+            params: {
+                email: 'test@example.com',
+                password: 'password',
+                categories: [2,3],
+                profile: File
+            },
+            categories: {
+                1: 'Shop',
+                2: 'Restaurant',
+                3: 'Station'
+            }
+        },
+        methods: {
+            submit: function() {
+
+                const params = this.getFormData({
+                    _method: 'PUT'
+                });
+                console.log(params);
+                axios.post('test.html', params)
+                    .then(function(response) {
+
+                        console.log(response.data);
+
+                    })
+                    .catch(function(error) {
+
+                        console.log(error.response.data);
+
+                    });
+
+                const error = {
+                    response: {
+                        data: {
+                            errors: {
+                                email: 'The email field is required.',
+                                password: 'The password field is required.',
+                            }
+                        }
+                    }
+                };
+                this.setFormErrors(error);
+
+            }
+        }
+    })
+
+</script>
+</body>
+</html>

@@ -54,7 +54,6 @@ Vue.mixin({
 
                     errors[key] = '';
                 }
-
                 Vue.set(this, errorKey, errors);
                 this.originalParams[paramKey] = this.copyFormObject(targetParams);
             }
@@ -78,11 +77,11 @@ Vue.mixin({
                     continue;
                 }
 
-                if (targetParam instanceof ApiFormFile) {
+                if (this.isApiFormFile(targetParam)) {
 
                     var file = targetParam.file;
 
-                    if (file instanceof FileList) {
+                    if (this.isTypeFileList(file)) {
 
                         for (var i = 0; i < file.length; i++) {
 
@@ -99,7 +98,7 @@ Vue.mixin({
 
                         data.append(key + '[]', targetParam[_i]);
                     }
-                } else {
+                } else if (typeof targetParam !== 'function') {
 
                     data.append(key, targetParam);
                 }
@@ -213,33 +212,88 @@ Vue.mixin({
             var keys = this.getFormKeys(fileKey);
             var paramKey = keys.param;
             var valueKey = keys.value;
-            this.$data[paramKey][valueKey] = new ApiFormFile(file);
+            var currentParams = this.copyFormObject(this.$data[paramKey]);
+            currentParams[valueKey] = new ApiFormFile(file);
+            Vue.set(this, paramKey, currentParams);
         },
 
         // Others
 
         resetFormParams: function resetFormParams(targetKey) {
 
-            this.clearParamFileInputs();
+            this.clearFileParams(targetKey);
             var paramKey = this.getParamKey(targetKey);
             var originalParams = this.copyFormObject(this.originalParams[paramKey]);
             Vue.set(this, paramKey, originalParams);
         },
         clearFormParams: function clearFormParams(targetKey) {
 
-            this.clearParamFileInputs();
+            this.clearFileParams(targetKey);
+            this.clearInputParams(targetKey);
+        },
+        clearInputParams: function clearInputParams(targetKey) {
+
             var paramKey = this.getParamKey(targetKey);
             var targetParams = this.$data[paramKey];
             var params = {};
 
             for (var key in targetParams) {
 
-                if (this.originalParams[paramKey][key] === null) {
+                var targetParam = targetParams[key];
 
-                    params[key] = null;
-                } else {
+                if (typeof targetParam === 'string' || typeof targetParam === 'number') {
 
                     params[key] = '';
+                } else if (targetParam instanceof Array) {
+
+                    params[key] = [];
+                } else {
+
+                    params[key] = targetParam;
+                }
+            }
+
+            Vue.set(this, paramKey, params);
+        },
+        clearFileParams: function clearFileParams(targetKey) {
+
+            var paramKey = this.getParamKey(targetKey);
+            var targetParams = this.$data[paramKey];
+            var params = {};
+
+            for (var key in targetParams) {
+
+                var targetParam = targetParams[key];
+                var isFunction = typeof targetParam === 'function';
+                var isApiFormFile = this.isApiFormFile(targetParam);
+
+                if (isFunction || isApiFormFile) {
+
+                    if (isFunction) {
+
+                        if (this.isEmptyFile(targetParam)) {
+
+                            params[key] = File;
+                        } else if (this.isEmptyFileList(targetParam)) {
+
+                            params[key] = FileList;
+                        }
+                    } else if (isApiFormFile) {
+
+                        if (this.isTypeFile(targetParam)) {
+
+                            params[key] = File;
+                        } else if (this.isTypeFileList(targetParam.file)) {
+
+                            params[key] = FileList;
+                        }
+                    }
+
+                    var fileInput = this.paramFileInputs[paramKey + '.' + key];
+                    fileInput.value = '';
+                } else {
+
+                    params[key] = targetParam;
                 }
             }
 
@@ -269,17 +323,51 @@ Vue.mixin({
                 this.originalParams[paramKey] = {};
             }
         },
-        clearParamFileInputs: function clearParamFileInputs() {
-
-            for (var key in this.paramFileInputs) {
-
-                var fileInput = this.paramFileInputs[key];
-                fileInput.value = '';
-            }
-        },
         copyFormObject: function copyFormObject(obj) {
 
-            return JSON.parse(JSON.stringify(obj));
+            var newObject = {};
+
+            for (var key in obj) {
+
+                var value = obj[key];
+
+                if (typeof value === 'function') {
+
+                    if (this.isEmptyFile(value)) {
+
+                        newObject[key] = File;
+                    } else if (this.isEmptyFileList(value)) {
+
+                        newObject[key] = FileList;
+                    }
+                } else {
+
+                    newObject[key] = value;
+                }
+            }
+
+            return newObject;
+        },
+
+        isTypeFile: function isTypeFile(value) {
+
+            return value instanceof File;
+        },
+        isTypeFileList: function isTypeFileList(value) {
+
+            return value instanceof FileList;
+        },
+        isEmptyFile: function isEmptyFile(value) {
+
+            return value === File;
+        },
+        isEmptyFileList: function isEmptyFileList(value) {
+
+            return value === FileList;
+        },
+        isApiFormFile: function isApiFormFile(value) {
+
+            return value instanceof ApiFormFile;
         }
     },
     mounted: function mounted() {
