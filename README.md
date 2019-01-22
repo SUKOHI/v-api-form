@@ -64,7 +64,16 @@ This package rearrange `errors` that has only first messages of errors through `
         
 Now `this.errors` will be changed to rearranged errors when you get errors.
 
-However, this is mainly for axios and Laravel response.  
+Note:   
+If your error has a key which includes dot-notation, the message will be Object as follows.  
+
+    {
+        "0":"The photos.0 must be a file of type: jpg.",
+        "1":"The photos.1 must be a file of type: jpg."
+        "2":"The photos.2 must be a file of type: jpg."
+    }
+
+The rearrangement is mainly for axios and Laravel response.  
 Please override `getFormErrors()` if you'd like to use other data construction.
 
     methods: {

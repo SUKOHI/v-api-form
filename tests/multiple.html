@@ -58,7 +58,7 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.min.js"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-<script src="../dist/v-api-form.js"></script>
+<script src="../src/v-api-form.js"></script>
 <script>
 
     new Vue({
@@ -107,6 +107,10 @@
                             errors: {
                                 email: 'The email field is required.',
                                 password: 'The password field is required.',
+                                'profiles.user': 'The photos.0 must be a file of type: jpg.',
+                                'photos.0': 'The photos.0 must be a file of type: jpg.',
+                                'photos.1': 'The photos.1 must be a file of type: jpg.',
+                                'photos.2': 'The photos.2 must be a file of type: jpg.',
                             }
                         }
                     }
