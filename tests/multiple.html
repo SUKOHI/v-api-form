@@ -4,6 +4,7 @@
 </head>
 <body>
 <div id="app">
+
     <h1>Original Parameters</h1>
     {{ originalParams }}
     <hr>
@@ -107,7 +108,8 @@
                             errors: {
                                 email: 'The email field is required.',
                                 password: 'The password field is required.',
-                                'profiles.user': 'The photos.0 must be a file of type: jpg.',
+                                'profiles': 'This field is required.',
+                                'profiles.user': 'The profiles.user must be a file of type: jpg.',
                                 'photos.0': 'The photos.0 must be a file of type: jpg.',
                                 'photos.1': 'The photos.1 must be a file of type: jpg.',
                                 'photos.2': 'The photos.2 must be a file of type: jpg.',

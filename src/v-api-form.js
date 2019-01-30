@@ -230,37 +230,37 @@ Vue.mixin({
 
                     errors[key] = formErrors[key];
 
-                } else {
+                }
 
-                    for(let formErrorKey in formErrors) {
+                for(let formErrorKey in formErrors) {
 
-                        if(formErrorKey.startsWith(key +'.')) {
+                    if(formErrorKey.startsWith(key +'.')) {
 
-                            let keys = formErrorKey.split('.');
-                            let firstKey = keys[0];
-                            let secondKey = keys[1];
+                        let keys = formErrorKey.split('.');
+                        let firstKey = keys[0];
+                        let secondKey = keys[1];
 
-                            if(targetErrors[firstKey] !== undefined) {
+                        if(targetErrors[firstKey] !== undefined) {
 
-                                if(errors[firstKey] === undefined) {
+                            var arrayKey = firstKey +'.*';
 
-                                    errors[firstKey] = {};
+                            if(errors[arrayKey] === undefined) {
 
-                                }
-
-                                errors[firstKey][secondKey] = formErrors[formErrorKey];
+                                errors[arrayKey] = {};
 
                             }
+
+                            errors[arrayKey][secondKey] = formErrors[formErrorKey];
 
                         }
 
                     }
 
-                    if(errors[key] === undefined) {
+                }
 
-                        errors[key] = '';
+                if(errors[key] === undefined) {
 
-                    }
+                    errors[key] = '';
 
                 }
 

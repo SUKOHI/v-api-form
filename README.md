@@ -64,10 +64,11 @@ This package rearrange `errors` that has only first messages of errors through `
         
 Now `this.errors` will be changed to rearranged errors when you get errors.
 
-Note:   
-If your error has a key which includes dot-notation, the message will be Object as follows.  
+Note:  
+If your error has a key which includes dot-notation like `photos.0`, the message will be Object as follows.  
+This also means if the original key is 'photos', the error key will be 'photos.*'
 
-    {
+    'photos.*': {
         "0":"The photos.0 must be a file of type: jpg.",
         "1":"The photos.1 must be a file of type: jpg."
         "2":"The photos.2 must be a file of type: jpg."
