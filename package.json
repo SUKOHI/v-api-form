@@ -1,6 +1,6 @@
 {
   "name": "v-api-form",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "A Vue package for managing FormData that is used as ajax parameters.",
   "main": "dist/v-api-form.js",
   "scripts": {

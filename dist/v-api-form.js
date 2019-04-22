@@ -2,10 +2,81 @@
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var ApiFormFile = function ApiFormFile(file) {
+var ApiFormFile = function ApiFormFile(file, options) {
+    var _this = this;
+
     _classCallCheck(this, ApiFormFile);
 
     this.file = file;
+
+    if (options.maxImageWidth || options.maxImageHeight) {
+        (function () {
+
+            _this.images = {
+                isResizing: true,
+                resizeData: []
+            };
+            var maxImageWidth = options.maxImageWidth;
+            var maxImageHeight = options.maxImageHeight;
+            var resizingFiles = _this.file;
+
+            if (resizingFiles instanceof File) {
+
+                resizingFiles = [resizingFiles];
+            }
+
+            var _loop = function _loop(i) {
+
+                var resizingFile = resizingFiles[i];
+                var reader = new FileReader();
+                reader.onload = function (e) {
+
+                    var img = new Image();
+                    img.onload = function () {
+
+                        var width = img.width;
+                        var height = img.height;
+
+                        if (maxImageWidth && width > maxImageWidth) {
+
+                            height = Math.round(height * maxImageWidth / width);
+                            width = maxImageWidth;
+                        }
+
+                        if (maxImageHeight && height > maxImageHeight) {
+
+                            width = Math.round(width * maxImageHeight / height);
+                            height = maxImageHeight;
+                        }
+
+                        var canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        var ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        ctx.canvas.toBlob(function (blob) {
+
+                            blob.lastModifiedDate = new Date();
+                            blob.name = resizingFile.name;
+
+                            _this.images.resizeData.push(blob);
+
+                            if (resizingFiles.length === _this.images.resizeData.length) {
+
+                                _this.images.isResizing = false;
+                            }
+                        }, resizingFile.type, 1);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(resizingFile);
+            };
+
+            for (var i = 0; i < resizingFiles.length; i++) {
+                _loop(i);
+            }
+        })();
+    }
 };
 
 Vue.directive('file-model', {
@@ -81,22 +152,40 @@ Vue.mixin({
 
                     var file = targetParam.file;
 
-                    if (this.isTypeFileList(file)) {
+                    if (targetParam.images) {
 
-                        for (var i = 0; i < file.length; i++) {
+                        var resizedImages = targetParam.images.resizeData;
 
-                            var targetFile = file[i];
-                            data.append(key + '[]', targetFile);
+                        if (this.isTypeFileList(file)) {
+
+                            for (var i = 0; i < resizedImages.length; i++) {
+
+                                var targetFile = resizedImages[i];
+                                data.append(key + '[]', targetFile);
+                            }
+                        } else {
+
+                            data.append(key, resizedImages[0]);
                         }
                     } else {
 
-                        data.append(key, file);
+                        if (this.isTypeFileList(file)) {
+
+                            for (var _i = 0; _i < file.length; _i++) {
+
+                                var _targetFile = file[_i];
+                                data.append(key + '[]', _targetFile);
+                            }
+                        } else {
+
+                            data.append(key, file);
+                        }
                     }
                 } else if (targetParam instanceof Array) {
 
-                    for (var _i = 0; _i < targetParam.length; _i++) {
+                    for (var _i2 = 0; _i2 < targetParam.length; _i2++) {
 
-                        data.append(key + '[]', targetParam[_i]);
+                        data.append(key + '[]', targetParam[_i2]);
                     }
                 } else if (typeof targetParam !== 'function') {
 
@@ -112,9 +201,9 @@ Vue.mixin({
 
                     if (extraParam instanceof Array) {
 
-                        for (var _i2 = 0; _i2 < extraParam.length; _i2++) {
+                        for (var _i3 = 0; _i3 < extraParam.length; _i3++) {
 
-                            data.append(_key + '[]', extraParam[_i2]);
+                            data.append(_key + '[]', extraParam[_i3]);
                         }
                     } else {
 
@@ -252,8 +341,12 @@ Vue.mixin({
             var keys = this.getFormKeys(fileKey);
             var paramKey = keys.param;
             var valueKey = keys.value;
+            var options = {
+                maxImageWidth: e.target.getAttribute('max-image-width'),
+                maxImageHeight: e.target.getAttribute('max-image-height')
+            };
             var currentParams = this.copyFormObject(this.$data[paramKey]);
-            currentParams[valueKey] = new ApiFormFile(file);
+            currentParams[valueKey] = new ApiFormFile(file, options);
             Vue.set(this, paramKey, currentParams);
         },
 

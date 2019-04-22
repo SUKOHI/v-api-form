@@ -1,6 +1,80 @@
 class ApiFormFile {
-    constructor(file) {
+    constructor(file, options) {
+
         this.file = file;
+
+        if(options.maxImageWidth || options.maxImageHeight) {
+
+            this.images = {
+                isResizing: true,
+                resizeData: []
+            };
+            const maxImageWidth = options.maxImageWidth;
+            const maxImageHeight = options.maxImageHeight;
+            let resizingFiles = this.file;
+
+            if(resizingFiles instanceof File) {
+
+                resizingFiles = [resizingFiles];
+
+            }
+
+            for(let i = 0 ; i < resizingFiles.length ; i++) {
+
+                let resizingFile = resizingFiles[i];
+                let reader = new FileReader();
+                reader.onload = (e) => {
+
+                    let img = new Image();
+                    img.onload = () => {
+
+                        let width = img.width;
+                        let height = img.height;
+
+                        if(maxImageWidth && width > maxImageWidth) {
+
+                            height = Math.round(height * maxImageWidth / width);
+                            width = maxImageWidth;
+
+                        }
+
+                        if(maxImageHeight && height > maxImageHeight) {
+
+                            width = Math.round(width * maxImageHeight / height);
+                            height = maxImageHeight;
+
+                        }
+
+                        let canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        let ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        ctx.canvas.toBlob((blob) => {
+
+                            blob.lastModifiedDate = new Date();
+                            blob.name = resizingFile.name;
+
+                            this.images.resizeData.push(blob);
+
+                            if(resizingFiles.length === this.images.resizeData.length) {
+
+                                this.images.isResizing = false;
+
+                            }
+
+                        }, resizingFile.type, 1);
+
+                    };
+                    img.src = e.target.result;
+
+                };
+                reader.readAsDataURL(resizingFile);
+
+            }
+
+        }
+
     }
 }
 
@@ -84,18 +158,41 @@ Vue.mixin({
 
                     const file = targetParam.file;
 
-                    if(this.isTypeFileList(file)) {
+                    if(targetParam.images) {
 
-                        for(let i = 0 ; i < file.length ; i++) {
+                        const resizedImages = targetParam.images.resizeData;
 
-                            let targetFile = file[i];
-                            data.append(key +'[]', targetFile);
+                        if(this.isTypeFileList(file)) {
+
+                            for(let i = 0 ; i < resizedImages.length ; i++) {
+
+                                let targetFile = resizedImages[i];
+                                data.append(key +'[]', targetFile);
+
+                            }
+
+                        } else {
+
+                            data.append(key, resizedImages[0]);
 
                         }
 
                     } else {
 
-                        data.append(key, file);
+                        if(this.isTypeFileList(file)) {
+
+                            for(let i = 0 ; i < file.length ; i++) {
+
+                                let targetFile = file[i];
+                                data.append(key +'[]', targetFile);
+
+                            }
+
+                        } else {
+
+                            data.append(key, file);
+
+                        }
 
                     }
 
@@ -290,8 +387,12 @@ Vue.mixin({
             const keys = this.getFormKeys(fileKey);
             const paramKey = keys.param;
             const valueKey = keys.value;
+            const options = {
+                maxImageWidth: e.target.getAttribute('max-image-width'),
+                maxImageHeight: e.target.getAttribute('max-image-height')
+            };
             let currentParams = this.copyFormObject(this.$data[paramKey]);
-            currentParams[valueKey] = new ApiFormFile(file);
+            currentParams[valueKey] = new ApiFormFile(file, options);
             Vue.set(this, paramKey, currentParams);
 
         },

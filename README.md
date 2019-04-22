@@ -173,7 +173,35 @@ You can specify target parameters/errors when using each methods in multiple par
 
     // Error
     this.clearFormErrors('customErrors');
+
+# Resize image
+
+You can automatically resize selected image(s) by setting `max-image-width` or `max-image-height` as follows.
     
+    <!-- Width -->
+    <input type="file" 
+        accept="image/*" 
+        max-image-width="300" 
+        v-file-model="params.images">
+
+    <!-- Height -->
+    <input 
+        type="file" 
+        accept="image/*" 
+        max-image-height="300" 
+        v-file-model="params.images">
+        
+    <!-- Both -->
+    <input 
+        type="file" 
+        accept="image/*" 
+        max-image-width="300" 
+        max-image-height="300" 
+        v-file-model="params.images">
+
+Note: If your application need to support ie 11, use 
+[JavaScript Canvas to Blob](https://github.com/blueimp/JavaScript-Canvas-to-Blob).
+
 # License
 This package is licensed under the MIT License.
 
