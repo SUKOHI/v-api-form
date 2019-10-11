@@ -97,11 +97,13 @@
                             errors: {
                                 email: 'The email field is required.',
                                 password: 'The password field is required.',
+                                'nested_items.0.id': 'This field is required.'
                             }
                         }
                     }
                 };
                 this.setFormErrors(error);
+                console.log(this.errors)
 
             }
         }

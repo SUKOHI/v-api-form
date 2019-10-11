@@ -352,52 +352,8 @@ Vue.mixin({
         setFormErrors(error, targetKey) {
 
             const errorKey = this.getErrorKey(targetKey);
-            const targetErrors = this.$data[errorKey];
             const formErrors = this.getFormErrors(error);
-            let errors = {};
-
-            for(let key in targetErrors) {
-
-                if (formErrors[key] !== undefined) {
-
-                    errors[key] = formErrors[key];
-
-                } else {
-
-                    for(let formErrorKey in formErrors) {
-
-                        if(formErrorKey.startsWith(key +'.')) {
-
-                            let keys = formErrorKey.split('.');
-                            let firstKey = keys[0];
-                            let secondKey = keys[1];
-
-                            if(targetErrors[firstKey] !== undefined) {
-
-                                if(errors[firstKey] === undefined) {
-
-                                    errors[firstKey] = {};
-
-                                }
-
-                                errors[firstKey][secondKey] = formErrors[formErrorKey];
-
-                            }
-
-                        }
-
-                    }
-
-                    if(errors[key] === undefined) {
-
-                        errors[key] = '';
-
-                    }
-
-                }
-
-            }
-
+            let errors = this.dotNotationToObject(formErrors);
             Vue.set(this, errorKey, errors);
 
         },
@@ -617,6 +573,32 @@ Vue.mixin({
             }
 
             return newObject;
+
+        },
+        dotNotationToObject(dotNotationObj) {
+
+            let convertedObj = {};
+
+            for(let key in dotNotationObj) {
+
+                let tempObj = convertedObj;
+                let valueKeys = key.split('.');
+                let lastKey = valueKeys.pop();
+                let valueKeysLength = valueKeys.length;
+
+                for(let i = 0 ; i < valueKeysLength ; i++) {
+
+                    let firstKey = valueKeys.shift();
+                    tempObj[firstKey] = tempObj[firstKey] || {};
+                    tempObj = tempObj[firstKey];
+
+                }
+
+                tempObj[lastKey] = dotNotationObj[key]
+
+            }
+
+            return convertedObj;
 
         },
         isTypeFile: function(value) {

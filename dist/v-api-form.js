@@ -317,44 +317,8 @@ Vue.mixin({
         setFormErrors: function setFormErrors(error, targetKey) {
 
             var errorKey = this.getErrorKey(targetKey);
-            var targetErrors = this.$data[errorKey];
             var formErrors = this.getFormErrors(error);
-            var errors = {};
-
-            for (var key in targetErrors) {
-
-                if (formErrors[key] !== undefined) {
-
-                    errors[key] = formErrors[key];
-                } else {
-
-                    for (var formErrorKey in formErrors) {
-
-                        if (formErrorKey.startsWith(key + '.')) {
-
-                            var keys = formErrorKey.split('.');
-                            var firstKey = keys[0];
-                            var secondKey = keys[1];
-
-                            if (targetErrors[firstKey] !== undefined) {
-
-                                if (errors[firstKey] === undefined) {
-
-                                    errors[firstKey] = {};
-                                }
-
-                                errors[firstKey][secondKey] = formErrors[formErrorKey];
-                            }
-                        }
-                    }
-
-                    if (errors[key] === undefined) {
-
-                        errors[key] = '';
-                    }
-                }
-            }
-
+            var errors = this.dotNotationToObject(formErrors);
             Vue.set(this, errorKey, errors);
         },
         setApiFormParams: function setApiFormParams(params) {
@@ -538,6 +502,29 @@ Vue.mixin({
             }
 
             return newObject;
+        },
+        dotNotationToObject: function dotNotationToObject(dotNotationObj) {
+
+            var convertedObj = {};
+
+            for (var key in dotNotationObj) {
+
+                var tempObj = convertedObj;
+                var valueKeys = key.split('.');
+                var lastKey = valueKeys.pop();
+                var valueKeysLength = valueKeys.length;
+
+                for (var i = 0; i < valueKeysLength; i++) {
+
+                    var firstKey = valueKeys.shift();
+                    tempObj[firstKey] = tempObj[firstKey] || {};
+                    tempObj = tempObj[firstKey];
+                }
+
+                tempObj[lastKey] = dotNotationObj[key];
+            }
+
+            return convertedObj;
         },
 
         isTypeFile: function isTypeFile(value) {
