@@ -308,6 +308,39 @@ Vue.mixin({
             return errors;
 
         },
+        getFormError(key, defaultValue, targetKey) {
+
+            if(defaultValue === undefined) {
+
+                defaultValue = '';
+
+            }
+
+            const errorKey = this.getErrorKey(targetKey);
+            const targetErrors = this[errorKey];
+
+            let tempErrors = targetErrors;
+            let keys = key.split('.');
+
+            for(let i = 0 ; i < keys.length; i++) {
+
+                let targetKey = keys[i];
+
+                if(tempErrors[targetKey] !== undefined) {
+
+                    tempErrors = tempErrors[targetKey];
+
+                } else {
+
+                    return defaultValue;
+
+                }
+
+            }
+
+            return tempErrors;
+
+        },
         getAppendKey(keys) {
 
             let keyparts = [];

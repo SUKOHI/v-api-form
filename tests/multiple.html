@@ -130,6 +130,8 @@
                 const errorKey = (key === 'params') ? 'errors' : 'customErrors';
                 this.setFormErrors(error, errorKey);
 
+                console.log(this.getFormData('photos.0', 'Default Value', errorKey))
+
             }
         },
         beforeMount: function() {

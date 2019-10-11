@@ -278,6 +278,34 @@ Vue.mixin({
 
             return errors;
         },
+        getFormError: function getFormError(key, defaultValue, targetKey) {
+
+            if (defaultValue === undefined) {
+
+                defaultValue = '';
+            }
+
+            var errorKey = this.getErrorKey(targetKey);
+            var targetErrors = this[errorKey];
+
+            var tempErrors = targetErrors;
+            var keys = key.split('.');
+
+            for (var i = 0; i < keys.length; i++) {
+
+                var _targetKey = keys[i];
+
+                if (tempErrors[_targetKey] !== undefined) {
+
+                    tempErrors = tempErrors[_targetKey];
+                } else {
+
+                    return defaultValue;
+                }
+            }
+
+            return tempErrors;
+        },
         getAppendKey: function getAppendKey(keys) {
 
             var keyparts = [];

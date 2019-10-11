@@ -96,6 +96,19 @@ Please override `getFormErrors()` if you'd like to use other data construction.
         }
     }
     
+If you'd like to retrieve an error by key or dot notation string, use getFormError() as follows.
+
+    const error = this.getFormError('email');
+    
+    // with Default Value
+    
+    this.getFormError('users.0.email', 'Default Value');
+    
+    // or specify target
+    
+    this.getFormError('email', 'Default Value', 'customErrors');
+        
+    
 ## File
 
 If you'd like to set `<input type="file">` in your page, use `v-file-model` in the same way as `v-model` .
