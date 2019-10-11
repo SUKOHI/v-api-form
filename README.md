@@ -15,7 +15,12 @@ First, set parameters in Vue.
             params: {
                 email: '',
                 password: '',
-                categories: [] // e.g. multiple checkboxes
+                categories: [], // e.g. multiple checkboxes
+                nested_values: [
+                    {id: 1, names: ['John', 'Mike']},
+                    {id: 2, namess: ['Max']},
+                    {id: 3, name: ['Ann', 'Christine']},
+                ]
             }
         },
         
@@ -39,7 +44,12 @@ You can get parameters through `FormData()`.
     
     const params = this.getFormData({
         _method: 'PUT',             // string
-        numbers: [1, 2, 3, 4, 5]    // array
+        numbers: [1, 2, 3, 4, 5],    // array
+        nested_values: [
+            {id: 1, names: ['John', 'Mike']},
+            {id: 2, namess: ['Max']},
+            {id: 3, name: ['Ann', 'Christine']},
+        ]
     });
 
 ## Errors
@@ -92,6 +102,12 @@ If you'd like to set `<input type="file">` in your page, use `v-file-model` in t
 
     <input type="file" v-file-model="params.profile">
     
+or in `v-for`
+    
+    <div v-for="(file,i) in params.files">
+        <input type="file" v-file-model="'params.files.'+ i">
+    </div>
+    
 In this case, set `File` or `FileList` as the default parameter.
 
     data: {
@@ -126,6 +142,8 @@ For example, `profiles[]` is the name in the above case.
     // or
     
     this.resetFormParams(); // change params to default values
+
+***Note:*** clearFormParams() remove nested object. So please use resetFormParams();
 
 ### Errors
 

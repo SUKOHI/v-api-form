@@ -69,7 +69,12 @@
                 email: 'test1@example.com',
                 password: 'password1',
                 categories: [2,3],
-                profile: File
+                profile: File,
+                nested_items: [
+                    {id: 1, name: 'Name 1'},
+                    {id: 2, name: 'Name 2'},
+                    {id: 3, name: 'Name 3'},
+                ]
             },
 
             customParams: {
@@ -77,6 +82,11 @@
                 password: 'password2',
                 profiles: FileList,
                 photos: FileList,
+                nested_items: [
+                    {id: 1, name: 'Name 1'},
+                    {id: 2, name: 'Name 2'},
+                    {id: 3, name: 'Name 3'},
+                ]
             },
             customErrors: {}
         },

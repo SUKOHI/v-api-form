@@ -1,5 +1,7 @@
 'use strict';
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var ApiFormFile = function ApiFormFile(file, options) {
@@ -50,9 +52,9 @@ var ApiFormFile = function ApiFormFile(file, options) {
                         }
 
                         var canvas = document.createElement('canvas');
+                        var ctx = canvas.getContext('2d');
                         canvas.width = width;
                         canvas.height = height;
-                        var ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         ctx.canvas.toBlob(function (blob) {
 
@@ -82,7 +84,7 @@ var ApiFormFile = function ApiFormFile(file, options) {
 Vue.directive('file-model', {
     bind: function bind(el, binding, vnode) {
 
-        var fileKey = binding.expression;
+        var fileKey = typeof binding.value === 'string' ? binding.value : binding.expression;
         vnode.context.setParamFileInput(fileKey, el);
 
         el.addEventListener('change', function (e) {
@@ -134,85 +136,84 @@ Vue.mixin({
         // Getter
 
         getFormData: function getFormData(extraParams, targetKey) {
+            var _this2 = this;
 
-            var paramKey = this.getParamKey(targetKey);
-            var targetParams = this.$data[paramKey];
-            var data = new FormData();
+            var formData = new FormData();
 
-            for (var key in targetParams) {
+            var appendFormData = function appendFormData(data, keys) {
 
-                var targetParam = targetParams[key];
+                if (keys === undefined) {
 
-                if (targetParam === null) {
-
-                    continue;
+                    keys = [];
                 }
 
-                if (this.isApiFormFile(targetParam)) {
+                var appendKey = _this2.getAppendKey(keys);
 
-                    var file = targetParam.file;
+                if (_this2.isApiFormFile(data)) {
 
-                    if (targetParam.images) {
+                    var file = data.file;
 
-                        var resizedImages = targetParam.images.resizeData;
+                    if (data.images) {
 
-                        if (this.isTypeFileList(file)) {
+                        var resizedImages = data.images.resizeData;
+
+                        if (_this2.isTypeFileList(file)) {
 
                             for (var i = 0; i < resizedImages.length; i++) {
 
                                 var targetFile = resizedImages[i];
-                                data.append(key + '[]', targetFile);
+                                formData.append(appendKey, targetFile);
                             }
                         } else {
 
-                            data.append(key, resizedImages[0]);
+                            formData.append(appendKey, resizedImages[0]);
                         }
                     } else {
 
-                        if (this.isTypeFileList(file)) {
+                        if (_this2.isTypeFileList(file)) {
 
                             for (var _i = 0; _i < file.length; _i++) {
 
                                 var _targetFile = file[_i];
-                                data.append(key + '[]', _targetFile);
+                                formData.append(appendKey, _targetFile);
                             }
                         } else {
 
-                            data.append(key, file);
+                            formData.append(appendKey, file);
                         }
                     }
-                } else if (targetParam instanceof Array) {
+                } else if (data instanceof Array) {
 
-                    for (var _i2 = 0; _i2 < targetParam.length; _i2++) {
+                    var arrayItems = data;
 
-                        data.append(key + '[]', targetParam[_i2]);
+                    for (var j = 0; j < arrayItems.length; j++) {
+
+                        var arrayItem = arrayItems[j];
+                        appendFormData(arrayItem, _this2.getAppendKeys(keys, j));
                     }
-                } else if (typeof targetParam !== 'function') {
+                } else if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object') {
 
-                    data.append(key, targetParam);
+                    for (var key in data) {
+
+                        var objectItem = data[key];
+                        appendFormData(objectItem, _this2.getAppendKeys(keys, key));
+                    }
+                } else if (typeof data !== 'function') {
+
+                    formData.append(appendKey, data);
                 }
-            }
+            };
+
+            var paramKey = this.getParamKey(targetKey);
+            var targetParams = this.$data[paramKey];
+            appendFormData(targetParams);
 
             if (extraParams !== undefined) {
 
-                for (var _key in extraParams) {
-
-                    var extraParam = extraParams[_key];
-
-                    if (extraParam instanceof Array) {
-
-                        for (var _i3 = 0; _i3 < extraParam.length; _i3++) {
-
-                            data.append(_key + '[]', extraParam[_i3]);
-                        }
-                    } else {
-
-                        data.append(_key, extraParam);
-                    }
-                }
+                appendFormData(extraParams);
             }
 
-            return data;
+            return formData;
         },
         getParamKey: function getParamKey(targetKey) {
 
@@ -226,22 +227,23 @@ Vue.mixin({
         getFormKeys: function getFormKeys(key) {
 
             var paramKey = '';
-            var valueKey = '';
+            var valueKeys = [];
 
             if (key.indexOf('.') !== -1) {
 
                 var keys = key.split('.');
                 paramKey = keys[0];
-                valueKey = keys[1];
+                keys.shift();
+                valueKeys = keys;
             } else {
 
                 paramKey = this.getParamKey();
-                valueKey = key;
+                valueKeys = [key];
             }
 
             return {
                 param: paramKey,
-                value: valueKey
+                value: valueKeys
             };
         },
         getErrorKey: function getErrorKey(targetKey) {
@@ -256,7 +258,7 @@ Vue.mixin({
 
 
         // This is mainly for axios and Laravel response.
-        // Please override if you'd like to use other data construction.
+        // Please override if you'd like to use other data structure.
         getFormErrors: function getFormErrors(error) {
 
             var errors = {};
@@ -275,6 +277,38 @@ Vue.mixin({
             }
 
             return errors;
+        },
+        getAppendKey: function getAppendKey(keys) {
+
+            var keyparts = [];
+
+            for (var i = 0; i < keys.length; i++) {
+
+                var key = keys[i];
+
+                if (i === 0) {
+
+                    keyparts.push(key);
+                } else {
+
+                    keyparts.push('[' + key + ']');
+                }
+            }
+
+            return keyparts.join('');
+        },
+        getAppendKeys: function getAppendKeys(baseKeys, additionalKey) {
+
+            var newKeys = [];
+
+            for (var i = 0; i < baseKeys.length; i++) {
+
+                var baseKey = baseKeys[i];
+                newKeys.push(baseKey);
+            }
+
+            newKeys.push(additionalKey);
+            return newKeys;
         },
 
 
@@ -340,13 +374,33 @@ Vue.mixin({
             var file = e.target.multiple ? e.target.files : e.target.files[0];
             var keys = this.getFormKeys(fileKey);
             var paramKey = keys.param;
-            var valueKey = keys.value;
+            var valueKeys = keys.value;
             var options = {
                 maxImageWidth: e.target.getAttribute('max-image-width'),
                 maxImageHeight: e.target.getAttribute('max-image-height')
             };
             var currentParams = this.copyFormObject(this.$data[paramKey]);
-            currentParams[valueKey] = new ApiFormFile(file, options);
+
+            if (valueKeys.length > 1) {
+
+                var tempObj = currentParams;
+                var lastKey = valueKeys.pop();
+                var valueKeysLength = valueKeys.length;
+
+                for (var i = 0; i < valueKeysLength; i++) {
+
+                    var firstKey = valueKeys.shift();
+                    tempObj[firstKey] = tempObj[firstKey] || {};
+                    tempObj = tempObj[firstKey];
+                }
+
+                tempObj[lastKey] = new ApiFormFile(file, options);
+            } else {
+
+                var targetKey = valueKeys[0];
+                currentParams[targetKey] = new ApiFormFile(file, options);
+            }
+
             Vue.set(this, paramKey, currentParams);
         },
 

@@ -25,7 +25,12 @@
             </label>
         </div>
         <br>
+        <h5>Regular file</h5>
         <input type="file" v-file-model="params.profile">
+        <h5>Nested files</h5>
+        <div v-for="(item,i) in params.nested_items">
+            <input type="file" v-file-model="'params.nested_items.'+ i +'.file'">
+        </div>
         <br>
         <hr>
         <button type="button" @click="submit">Submit</button><br>
@@ -34,11 +39,12 @@
         <button type="button" @click="clearFormErrors()">Clear errors</button><br>
         <button type="button" @click="clearInputParams()">Clear only inputs</button>
         <button type="button" @click="clearFileParams()">Clear only files</button>
+
     </form>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.min.js"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-<script src="../dist/v-api-form.js"></script>
+<script src="../src/v-api-form.js"></script>
 <script>
 
     new Vue({
@@ -48,7 +54,12 @@
                 email: 'test@example.com',
                 password: 'password',
                 categories: [2,3],
-                profile: File
+                profile: File,
+                nested_items: [
+                    {id: 1, names: ['John', 'Mike']},
+                    {id: 2, namess: ['Max']},
+                    {id: 3, name: ['Ann', 'Christine']},
+                ]
             },
             categories: {
                 1: 'Shop',
@@ -61,9 +72,13 @@
 
                 const params = this.getFormData({
                     _method: 'PUT',
-                    numbers: [1, 2, 3, 4, 5]
+                    numbers: [1, 2, 3, 4, 5],
+                    nested_items: [
+                        {id: 1, names: ['John', 'Mike']},
+                        {id: 2, namess: ['Max']},
+                        {id: 3, name: ['Ann', 'Christine']},
+                    ]
                 });
-                console.log(params);
                 axios.post('test.html', params)
                     .then(function(response) {
 

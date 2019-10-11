@@ -46,9 +46,9 @@ class ApiFormFile {
                         }
 
                         let canvas = document.createElement('canvas');
+                        let ctx = canvas.getContext('2d');
                         canvas.width = width;
                         canvas.height = height;
-                        let ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         ctx.canvas.toBlob((blob) => {
 
@@ -81,7 +81,7 @@ class ApiFormFile {
 Vue.directive('file-model', {
     bind(el, binding, vnode) {
 
-        const fileKey = binding.expression;
+        const fileKey = (typeof binding.value === 'string') ? binding.value : binding.expression;
         vnode.context.setParamFileInput(fileKey, el);
 
         el.addEventListener('change', (e) => {
@@ -140,40 +140,38 @@ Vue.mixin({
 
         getFormData(extraParams, targetKey) {
 
-            const paramKey = this.getParamKey(targetKey);
-            const targetParams = this.$data[paramKey];
-            let data = new FormData();
+            let formData = new FormData();
 
-            for(let key in targetParams) {
+            const appendFormData = (data, keys) => {
 
-                let targetParam = targetParams[key];
+                if(keys === undefined) {
 
-                if(targetParam === null) {
-
-                    continue;
+                    keys = [];
 
                 }
 
-                if(this.isApiFormFile(targetParam)) {
+                const appendKey = this.getAppendKey(keys);
 
-                    const file = targetParam.file;
+                if(this.isApiFormFile(data)) {
 
-                    if(targetParam.images) {
+                    const file = data.file;
 
-                        const resizedImages = targetParam.images.resizeData;
+                    if(data.images) {
+
+                        const resizedImages = data.images.resizeData;
 
                         if(this.isTypeFileList(file)) {
 
                             for(let i = 0 ; i < resizedImages.length ; i++) {
 
                                 let targetFile = resizedImages[i];
-                                data.append(key +'[]', targetFile);
+                                formData.append(appendKey, targetFile);
 
                             }
 
                         } else {
 
-                            data.append(key, resizedImages[0]);
+                            formData.append(appendKey, resizedImages[0]);
 
                         }
 
@@ -184,59 +182,57 @@ Vue.mixin({
                             for(let i = 0 ; i < file.length ; i++) {
 
                                 let targetFile = file[i];
-                                data.append(key +'[]', targetFile);
+                                formData.append(appendKey, targetFile);
 
                             }
 
                         } else {
 
-                            data.append(key, file);
+                            formData.append(appendKey, file);
 
                         }
 
                     }
 
-                } else if(targetParam instanceof Array) {
+                } else if(data instanceof Array) {
 
-                    for(let i = 0 ; i < targetParam.length ; i++) {
+                    let arrayItems = data;
 
-                        data.append(key +'[]', targetParam[i]);
+                    for(let j = 0 ; j < arrayItems.length ; j++) {
+
+                        let arrayItem = arrayItems[j];
+                        appendFormData(arrayItem,  this.getAppendKeys(keys, j));
 
                     }
 
-                } else if(typeof targetParam !== 'function') {
+                } else if(typeof data === 'object') {
 
-                    data.append(key, targetParam);
+                    for(let key in data) {
+
+                        let objectItem = data[key];
+                        appendFormData(objectItem, this.getAppendKeys(keys, key));
+
+                    }
+
+                } else if(typeof data !== 'function') {
+
+                    formData.append(appendKey, data);
 
                 }
 
-            }
+            };
+
+            const paramKey = this.getParamKey(targetKey);
+            const targetParams = this.$data[paramKey];
+            appendFormData(targetParams);
 
             if(extraParams !== undefined) {
 
-                for(let key in extraParams) {
-
-                    var extraParam = extraParams[key];
-
-                    if(extraParam instanceof Array) {
-
-                        for(let i = 0 ; i < extraParam.length ; i++) {
-
-                            data.append(key +'[]', extraParam[i]);
-
-                        }
-
-                    } else {
-
-                        data.append(key, extraParam);
-
-                    }
-
-                }
+                appendFormData(extraParams);
 
             }
 
-            return data;
+            return formData;
 
         },
         getParamKey(targetKey) {
@@ -253,24 +249,25 @@ Vue.mixin({
         getFormKeys(key) {
 
             let paramKey = '';
-            let valueKey = '';
+            let valueKeys = [];
 
             if(key.indexOf('.') !== -1) {
 
                 const keys = key.split('.');
                 paramKey = keys[0];
-                valueKey = keys[1];
+                keys.shift();
+                valueKeys = keys;
 
             } else {
 
                 paramKey = this.getParamKey();
-                valueKey = key;
+                valueKeys = [key];
 
             }
 
             return {
                 param: paramKey,
-                value: valueKey
+                value: valueKeys
             }
 
         },
@@ -287,7 +284,7 @@ Vue.mixin({
         },
 
         // This is mainly for axios and Laravel response.
-        // Please override if you'd like to use other data construction.
+        // Please override if you'd like to use other data structure.
         getFormErrors(error) {
 
             let errors = {};
@@ -309,6 +306,44 @@ Vue.mixin({
             }
 
             return errors;
+
+        },
+        getAppendKey(keys) {
+
+            let keyparts = [];
+
+            for(let i = 0 ; i < keys.length ; i++) {
+
+                let key = keys[i];
+
+                if(i === 0) {
+
+                    keyparts.push(key);
+
+                } else {
+
+                    keyparts.push('['+ key +']');
+
+                }
+
+            }
+
+            return keyparts.join('');
+
+        },
+        getAppendKeys(baseKeys, additionalKey) {
+
+            let newKeys = [];
+
+            for(let i = 0 ; i < baseKeys.length ; i++) {
+
+                let baseKey = baseKeys[i];
+                newKeys.push(baseKey);
+
+            }
+
+            newKeys.push(additionalKey);
+            return newKeys;
 
         },
 
@@ -386,13 +421,36 @@ Vue.mixin({
                 : e.target.files[0];
             const keys = this.getFormKeys(fileKey);
             const paramKey = keys.param;
-            const valueKey = keys.value;
+            const valueKeys = keys.value;
             const options = {
                 maxImageWidth: e.target.getAttribute('max-image-width'),
                 maxImageHeight: e.target.getAttribute('max-image-height')
             };
             let currentParams = this.copyFormObject(this.$data[paramKey]);
-            currentParams[valueKey] = new ApiFormFile(file, options);
+
+            if(valueKeys.length > 1) {
+
+                let tempObj = currentParams;
+                let lastKey = valueKeys.pop();
+                let valueKeysLength = valueKeys.length;
+
+                for(let i = 0 ; i < valueKeysLength ; i++) {
+
+                    let firstKey = valueKeys.shift();
+                    tempObj[firstKey] = tempObj[firstKey] || {};
+                    tempObj = tempObj[firstKey];
+
+                }
+
+                tempObj[lastKey] = new ApiFormFile(file, options);
+
+            } else {
+
+                const targetKey = valueKeys[0];
+                currentParams[targetKey] = new ApiFormFile(file, options);
+
+            }
+
             Vue.set(this, paramKey, currentParams);
 
         },
