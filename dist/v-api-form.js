@@ -182,7 +182,7 @@ Vue.mixin({
                             formData.append(appendKey, file);
                         }
                     }
-                } else if (data instanceof Array) {
+                } else if (_this2.isArray(data)) {
 
                     var arrayItems = data;
 
@@ -191,7 +191,7 @@ Vue.mixin({
                         var arrayItem = arrayItems[j];
                         appendFormData(arrayItem, _this2.getAppendKeys(keys, j));
                     }
-                } else if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object') {
+                } else if (_this2.isObject(data)) {
 
                     for (var key in data) {
 
@@ -267,7 +267,7 @@ Vue.mixin({
 
                 var responseError = error.response.data.errors[key];
 
-                if (typeof responseError === 'string') {
+                if (this.isString(responseError)) {
 
                     errors[key] = responseError;
                 } else {
@@ -411,76 +411,98 @@ Vue.mixin({
             this.clearInputParams(targetKey);
         },
         clearInputParams: function clearInputParams(targetKey) {
+            var _this3 = this;
 
             var paramKey = this.getParamKey(targetKey);
-            var targetParams = this.$data[paramKey];
-            var params = {};
+            var params = this.$data[paramKey];
+            var map = function map(data, keys) {
 
-            for (var key in targetParams) {
+                if (keys === undefined) {
 
-                var targetParam = targetParams[key];
-
-                if (typeof targetParam === 'string' || typeof targetParam === 'number') {
-
-                    params[key] = '';
-                } else if (targetParam instanceof Array) {
-
-                    params[key] = [];
-                } else {
-
-                    params[key] = targetParam;
+                    keys = [];
                 }
-            }
 
-            Vue.set(this, paramKey, params);
+                if (_this3.isArray(data)) {
+
+                    if (_this3.hasObjectInArray(data)) {
+
+                        for (var i = 0; i < data.length; i++) {
+
+                            var newKeys = keys.concat(i);
+                            map(data[i], newKeys);
+                        }
+                    } else {
+
+                        _this3.setNestedValue(params, keys, []);
+                    }
+                } else if (_this3.isObject(data)) {
+
+                    for (var key in data) {
+
+                        var _newKeys = keys.concat(key);
+                        map(data[key], _newKeys);
+                    }
+                } else if (_this3.isString(data) || _this3.isNumber(data)) {
+
+                    _this3.setNestedValue(params, keys, '');
+                }
+            };
+
+            map(params);
         },
         clearFileParams: function clearFileParams(targetKey) {
+            var _this4 = this;
 
             var paramKey = this.getParamKey(targetKey);
-            var targetParams = this.$data[paramKey];
-            var params = {};
+            var params = this.$data[paramKey];
 
-            for (var key in targetParams) {
+            var map = function map(data, keys) {
 
-                var targetParam = targetParams[key];
-                var isFunction = typeof targetParam === 'function';
-                var isApiFormFile = this.isApiFormFile(targetParam);
+                if (keys === undefined) {
 
-                if (isFunction || isApiFormFile) {
+                    keys = [];
+                }
 
-                    if (isFunction) {
+                if (_this4.isApiFormFile(data)) {
 
-                        if (this.isEmptyFile(targetParam)) {
+                    if (_this4.isTypeFile(data.file)) {
 
-                            params[key] = File;
-                        } else if (this.isEmptyFileList(targetParam)) {
+                        _this4.setNestedValue(params, keys, File);
+                    } else if (_this4.isTypeFileList(data.file)) {
 
-                            params[key] = FileList;
-                        }
-                    } else if (isApiFormFile) {
-
-                        if (this.isTypeFile(targetParam)) {
-
-                            params[key] = File;
-                        } else if (this.isTypeFileList(targetParam.file)) {
-
-                            params[key] = FileList;
-                        }
+                        _this4.setNestedValue(params, keys, FileList);
                     }
 
-                    var fileInput = this.paramFileInputs[paramKey + '.' + key];
+                    var fileInput = _this4.paramFileInputs[paramKey + '.' + keys.join('.')];
 
                     if (fileInput !== undefined) {
 
                         fileInput.value = '';
                     }
-                } else {
+                } else if (_this4.isArray(data)) {
 
-                    params[key] = targetParam;
+                    if (_this4.hasObjectInArray(data)) {
+
+                        for (var i = 0; i < data.length; i++) {
+
+                            var newKeys = keys.concat(i);
+                            map(data[i], newKeys);
+                        }
+                    } else {
+
+                        _this4.setNestedValue(params, keys, []);
+                    }
+                } else if (_this4.isObject(data)) {
+
+                    for (var key in data) {
+
+                        var _newKeys2 = keys.concat(key);
+                        map(data[key], _newKeys2);
+                    }
                 }
-            }
+            };
 
-            Vue.set(this, paramKey, params);
+            map(params);
         },
         clearFormErrors: function clearFormErrors(targetKey) {
 
@@ -507,28 +529,48 @@ Vue.mixin({
             }
         },
         copyFormObject: function copyFormObject(obj) {
+            var _this5 = this;
 
-            var newObject = {};
+            var newObject = JSON.parse(JSON.stringify(obj));
 
-            for (var key in obj) {
+            var map = function map(data, keys) {
 
-                var value = obj[key];
+                if (keys === undefined) {
 
-                if (typeof value === 'function') {
-
-                    if (this.isEmptyFile(value)) {
-
-                        newObject[key] = File;
-                    } else if (this.isEmptyFileList(value)) {
-
-                        newObject[key] = FileList;
-                    }
-                } else {
-
-                    newObject[key] = value;
+                    keys = [];
                 }
-            }
 
+                if (_this5.isEmptyFile(data)) {
+
+                    _this5.setNestedValue(newObject, keys, File);
+                } else if (_this5.isEmptyFileList(data)) {
+
+                    _this5.setNestedValue(newObject, keys, FileList);
+                } else if (_this5.isApiFormFile(data)) {
+
+                    _this5.setNestedValue(newObject, keys, data);
+                } else if (_this5.isArray(data)) {
+
+                    var arrayItems = data;
+
+                    for (var i = 0; i < arrayItems.length; i++) {
+
+                        var arrayItem = arrayItems[i];
+                        var newKeys = keys.concat(i);
+                        map(arrayItem, newKeys);
+                    }
+                } else if (_this5.isObject(data)) {
+
+                    for (var key in data) {
+
+                        var objectItem = data[key];
+                        var _newKeys3 = keys.concat(key);
+                        map(objectItem, _newKeys3);
+                    }
+                }
+            };
+
+            map(obj);
             return newObject;
         },
         dotNotationToObject: function dotNotationToObject(dotNotationObj) {
@@ -555,6 +597,21 @@ Vue.mixin({
             return convertedObj;
         },
 
+        setNestedValue: function setNestedValue(obj, keys, value) {
+
+            for (var i = 0; i < keys.length; i++) {
+
+                var key = keys[i];
+
+                if (i === keys.length - 1) {
+
+                    obj = obj[key] = value;
+                } else {
+
+                    obj = obj[key] = obj[key] || {};
+                }
+            }
+        },
         isTypeFile: function isTypeFile(value) {
 
             return value instanceof File;
@@ -574,6 +631,36 @@ Vue.mixin({
         isApiFormFile: function isApiFormFile(value) {
 
             return value instanceof ApiFormFile;
+        },
+        isArray: function isArray(value) {
+
+            return value instanceof Array;
+        },
+        isObject: function isObject(value) {
+
+            return !this.isEmptyFile(value) && !this.isEmptyFileList(value) && !this.isTypeFile(value) && !this.isTypeFileList(value) && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object';
+        },
+        isString: function isString(value) {
+
+            return typeof value === 'string';
+        },
+        isNumber: function isNumber(value) {
+
+            return typeof value === 'number';
+        },
+        hasObjectInArray: function hasObjectInArray(values) {
+
+            for (var i = 0; i < values.length; i++) {
+
+                var value = values[i];
+
+                if (this.isObject(value)) {
+
+                    return true;
+                }
+            }
+
+            return false;
         }
     },
     mounted: function mounted() {

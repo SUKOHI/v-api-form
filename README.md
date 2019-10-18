@@ -156,8 +156,6 @@ For example, `profiles[]` is the name in the above case.
     
     this.resetFormParams(); // change params to default values
 
-***Note:*** clearFormParams() remove nested object. So please use resetFormParams();
-
 ### Errors
 
     this.clearFormErrors();

@@ -29,7 +29,11 @@
         <input type="file" v-file-model="params.profile">
         <h5>Nested files</h5>
         <div v-for="(item,i) in params.nested_items">
+            <input type="text" v-model="item.age">
+            <br>
             <input type="file" v-file-model="'params.nested_items.'+ i +'.file'">
+            <br>
+            <br>
         </div>
         <br>
         <hr>
@@ -56,9 +60,9 @@
                 categories: [2,3],
                 profile: File,
                 nested_items: [
-                    {id: 1, names: ['John', 'Mike']},
-                    {id: 2, namess: ['Max']},
-                    {id: 3, name: ['Ann', 'Christine']},
+                    {id: 1, age:25, names: ['John', 'Mike'], file: File},
+                    {id: 2, age:22, names: ['Max'], file: File},
+                    {id: 3, age:16, names: ['Ann', 'Christine'], file: File},
                 ]
             },
             categories: {
