@@ -165,7 +165,7 @@ Vue.mixin({
                             for(let i = 0 ; i < resizedImages.length ; i++) {
 
                                 let targetFile = resizedImages[i];
-                                formData.append(appendKey, targetFile);
+                                formData.append(appendKey + '[]', targetFile);
 
                             }
 
@@ -182,7 +182,7 @@ Vue.mixin({
                             for(let i = 0 ; i < file.length ; i++) {
 
                                 let targetFile = file[i];
-                                formData.append(appendKey, targetFile);
+                                formData.append(appendKey + '[]', targetFile);
 
                             }
 

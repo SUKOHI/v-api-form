@@ -46,7 +46,10 @@
         <input type="text" v-model="customParams.password">
         <br>
         <input type="file" v-file-model="customParams.profiles" multiple>
-        <input type="file" v-file-model="customParams.photos" multiple>
+        <input type="file"
+           accept="image/*"
+           max-image-width="300"
+           v-file-model="customParams.photos" multiple>
         <br>
         <hr>
         <button type="button" @click="submit('customParams')">Submit</button><br>
